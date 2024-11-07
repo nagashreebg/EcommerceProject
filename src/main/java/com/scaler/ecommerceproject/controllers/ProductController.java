@@ -1,11 +1,9 @@
 package com.scaler.ecommerceproject.controllers;
 
-import com.scaler.ecommerceproject.dtos.CategoryDto;
 import com.scaler.ecommerceproject.dtos.ProductDto;
-import com.scaler.ecommerceproject.models.Category;
 import com.scaler.ecommerceproject.models.Product;
 import com.scaler.ecommerceproject.services.IProductService;
-import org.apache.hc.core5.http.HttpStatus;
+import com.scaler.ecommerceproject.utils.Convertion;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
@@ -35,11 +33,11 @@ public class ProductController {
             productDtos.add( from( product ) );
         }
         return new ResponseEntity<List<ProductDto>>(productDtos, headers,
-                HttpStatus.SC_OK );
+                HttpStatusCode.valueOf(200) );
     }
 
     @GetMapping("{id}")
-    public ResponseEntity<ProductDto> getProduct(@PathVariable("id") Long productId) {
+    public ResponseEntity<ProductDto> getProductById(@PathVariable("id") Long productId) {
         Product product = productService.getProductById(productId);
         MultiValueMap<String, String> headers = new LinkedMultiValueMap<>();
         headers.add("Accept", "application/json");
@@ -47,7 +45,7 @@ public class ProductController {
         headers.add("User-Agent", "Mozilla/5.0");
         headers.add( "called by", "smart frontend" );
         if( product != null )
-            return new ResponseEntity<>(from(product), headers, HttpStatus.SC_OK);
+            return new ResponseEntity<>(from(product), headers, HttpStatusCode.valueOf(200));
         else
             throw new IllegalArgumentException( "Product not found." );
     }
@@ -57,7 +55,7 @@ public class ProductController {
         Product product = from( productDto );
         product = productService.createProduct( product );
         if( product != null )
-            return new ResponseEntity<>(from(product), null, HttpStatus.SC_OK);
+            return new ResponseEntity<>(from(product), null, HttpStatusCode.valueOf(200));
         else
             return new ResponseEntity<>(null, HttpStatusCode.valueOf(404));
     }
@@ -66,46 +64,18 @@ public class ProductController {
     public ResponseEntity<ProductDto> replaceProduct( @PathVariable("id") Long productId,
                                       @RequestBody ProductDto productDto) {
         Product product = from( productDto );
-        product = productService.replaceProduct( productId, product );
+        productService.replaceProduct( productId, product );
         if( product != null )
-            return new ResponseEntity<>(from(product), null, HttpStatus.SC_OK);
+            return new ResponseEntity<>(from(product), null, HttpStatusCode.valueOf(200));
         else
             return new ResponseEntity<>(null, HttpStatusCode.valueOf(404));
     }
 
     public ProductDto from(Product product ) {
-        ProductDto productDto = ProductDto.builder()
-                                        .id(product.getId())
-                                        .name(product.getName())
-                                        .description(product.getDescription())
-                                        .price(product.getPrice())
-                                        .imageUrl(product.getImageUrl()).build();
-
-        if( product.getCategory() != null ) {
-            CategoryDto categoryDto = CategoryDto.builder()
-                    .id( product.getCategory().getId())
-                    .name( product.getCategory().getName() )
-                    .description( product.getCategory().getDescription()).build();
-            productDto.setCategory(categoryDto);
-        }
-        return productDto;
+        return Convertion.getProductDto(product);
     }
 
     public Product from(ProductDto productDto ) {
-        Product product = Product.builder()
-                .id(productDto.getId())
-                .name(productDto.getName())
-                .description(productDto.getDescription())
-                .price(productDto.getPrice())
-                .imageUrl(productDto.getImageUrl()).build();
-
-        if( productDto.getCategory() != null ) {
-            Category category = Category.builder()
-                    .id( productDto.getCategory().getId())
-                    .name( productDto.getCategory().getName() )
-                    .description( productDto.getCategory().getDescription()).build();
-            product.setCategory(category);
-        }
-        return product;
+        return Convertion.getProduct( productDto );
     }
 }
