@@ -16,8 +16,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(controllers = ProductController.class)
@@ -80,6 +79,48 @@ public class ProductControllerMvcTest {
                 .andExpect( status().isOk() )
                 .andExpect( content().string(objectMapper.writeValueAsString(productDto)))
                 .andExpect(jsonPath("$.name").value("iPhone16"))
+                .andExpect( jsonPath( "$.length()").value(3));
+    }
+
+    @Test
+    public void Test_GetProductById_RunsSuccessfully() throws Exception {
+        ProductDto productDto = ProductDto.builder()
+                .id( 1L )
+                .name( "iPhone16")
+                .price( 120000D)
+                .build();
+        Product product = Product.builder()
+                .id( 1L )
+                .name( "iPhone16")
+                .price( 120000D)
+                .build();
+        when( productService.getProductById(any(Long.class)) ).thenReturn(product);
+        mockMvc.perform(get("/products/" + productDto.getId()))
+                .andExpect( status().isOk() )
+                .andExpect( content().string(objectMapper.writeValueAsString(productDto)))
+                .andExpect(jsonPath("$.id").value(productDto.getId()))
+                .andExpect(jsonPath("$.name").value("iPhone16"))
+                .andExpect( jsonPath( "$.length()").value(3));
+    }
+
+    @Test
+    public void Test_ReplaceProduct_RunsSuccessfully() throws Exception {
+        ProductDto productDto = ProductDto.builder()
+                .id( 1L )
+                .name( "iPhone20")
+                .price( 120000D)
+                .build();
+        Product product = Product.builder()
+                .id( 1L )
+                .name( "iPhone16")
+                .price( 120000D)
+                .build();
+        when( productService.getProductById(any(Long.class)) ).thenReturn(product);
+        mockMvc.perform(put("/products/" + productDto.getId()).content(objectMapper.writeValueAsString(productDto)).contentType(MediaType.APPLICATION_JSON))
+                .andExpect( status().isOk() )
+                .andExpect( content().string(objectMapper.writeValueAsString(productDto)))
+                .andExpect(jsonPath("$.id").value(productDto.getId()))
+                .andExpect(jsonPath("$.name").value("iPhone20"))
                 .andExpect( jsonPath( "$.length()").value(3));
     }
 }
